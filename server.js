@@ -12,14 +12,9 @@ const PORT = process.env.PORT || 3000;
 
 // ── MIDDLEWARE ─────────────────────────────────────────────────────
 app.use(express.json());
-app.use(cors({
-  origin: [
-    'https://chiragpatil99.github.io',  // GitHub Pages (production)
-    'http://localhost:5500',             // Live Server (local dev)
-    'http://127.0.0.1:5500',
-    'http://localhost:3000',
-  ]
-}));
+
+// Allow all origins (safe since this proxy only calls Anthropic)
+app.use(cors());
 
 // ── HEALTH CHECK ──────────────────────────────────────────────────
 app.get('/', (req, res) => {
@@ -58,6 +53,7 @@ app.post('/api/generate-report', async (req, res) => {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error('Anthropic error:', data);
       return res.status(response.status).json({ error: data.error?.message || 'Anthropic API error.' });
     }
 
@@ -66,7 +62,7 @@ app.post('/api/generate-report', async (req, res) => {
 
   } catch (err) {
     console.error('Proxy error:', err);
-    res.status(500).json({ error: 'Failed to contact Anthropic API.' });
+    res.status(500).json({ error: 'Failed to contact Anthropic API: ' + err.message });
   }
 });
 
